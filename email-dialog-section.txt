@@ -1,0 +1,581 @@
+              {/* Email Dialog */}
+              <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Email Notifications</DialogTitle>
+                    <DialogDescription>
+                      Receive sales target status notifications via email.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Switch
+                        id="email-enabled"
+                        checked={
+                          settings.notifications?.methods?.email || false
+                        }
+                        onCheckedChange={(checked) => {
+                          // When email is enabled, automatically enable budget alerts
+                          setSettings({
+                            ...settings,
+                            notifications: {
+                              ...settings.notifications,
+                              methods: {
+                                ...settings.notifications.methods,
+                                email: checked,
+                              },
+                              // Auto-enable budget alerts when email is enabled
+                              budgetAlerts: {
+                                ...(settings.notifications?.budgetAlerts || {
+                                  hourlyTarget: 0,
+                                  dailyTarget: 0,
+                                }),
+                                enabled: checked,
+                              },
+                            },
+                          });
+                        }}
+                      />
+                      <Label htmlFor="email-enabled">
+                        Enable Email Notifications
+                      </Label>
+                    </div>
+                    {settings.notifications?.methods?.email && (
+                      <>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="email-address" className="text-right">
+                            Email Address
+                          </Label>
+                          <Input
+                            id="email-address"
+                            placeholder="Enter your email address"
+                            value={settings.notifications?.emailAddress || ""}
+                            onChange={(e) =>
+                              setSettings({
+                                ...settings,
+                                notifications: {
+                                  ...settings.notifications,
+                                  emailAddress: e.target.value,
+                                },
+                              })
+                            }
+                            className="col-span-3"
+                          />
+                        </div>
+
+                        <div className="mt-4">
+                          <div className="border rounded-md p-3 space-y-3 bg-blue-50">
+                            <h4 className="text-sm font-medium">
+                              Sales Targets
+                            </h4>
+                            <p className="text-xs text-gray-600">
+                              Configure sales targets for performance
+                              notifications
+                            </p>
+
+                            {/* New layout to match design */}
+                            <div className="space-y-4">
+                              {/* First row: Period dropdown and Sales Target label */}
+                              <div className="flex items-center gap-4">
+                                <div className="w-32">
+                                  <Select
+                                    value={
+                                      settings.notifications?.budgetAlerts
+                                        ?.targetPeriod || "Hourly"
+                                    }
+                                    onValueChange={(value) =>
+                                      setSettings({
+                                        ...settings,
+                                        notifications: {
+                                          ...settings.notifications,
+                                          budgetAlerts: {
+                                            ...(settings.notifications
+                                              ?.budgetAlerts || {
+                                              enabled: true,
+                                            }),
+                                            targetPeriod: value,
+                                          },
+                                        },
+                                      })
+                                    }
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select period" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Hourly">
+                                        Hourly
+                                      </SelectItem>
+                                      <SelectItem value="Daily">
+                                        Daily
+                                      </SelectItem>
+                                      <SelectItem value="Weekly">
+                                        Weekly
+                                      </SelectItem>
+                                      <SelectItem value="Monthly">
+                                        Monthly
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <span className="font-medium">
+                                  Sales Target
+                                </span>
+                              </div>
+
+                              {/* All inputs in single row with calculation on the left */}
+                              <div className="flex items-center gap-4 mt-2">
+                                <div className="text-center">
+                                  <Label
+                                    htmlFor="calculation-basis"
+                                    className="block pb-1 text-sm"
+                                  >
+                                    Calculation
+                                  </Label>
+                                  <Select
+                                    value={
+                                      settings.notifications?.budgetAlerts
+                                        ?.calculationBasis || "By Tax"
+                                    }
+                                    onValueChange={(value) =>
+                                      setSettings({
+                                        ...settings,
+                                        notifications: {
+                                          ...settings.notifications,
+                                          budgetAlerts: {
+                                            ...(settings.notifications
+                                              ?.budgetAlerts || {
+                                              enabled: true,
+                                            }),
+                                            calculationBasis: value,
+                                          },
+                                        },
+                                      })
+                                    }
+                                  >
+                                    <SelectTrigger
+                                      id="calculation-basis"
+                                      className="w-[110px]"
+                                    >
+                                      <SelectValue placeholder="By Tax" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="By Tax">
+                                        By Tax
+                                      </SelectItem>
+                                      <SelectItem value="By SalesExc">
+                                        By Sales Excluding Tax
+                                      </SelectItem>
+                                      <SelectItem value="By SalesInc">
+                                        By Sales Including Tax
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="text-center">
+                                  <Label
+                                    htmlFor="target-min"
+                                    className="block pb-1 text-sm"
+                                  >
+                                    Min
+                                  </Label>
+                                  <Input
+                                    id="target-min"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0.01"
+                                    value={
+                                      settings.notifications?.budgetAlerts
+                                        ?.targetMin !== undefined
+                                        ? settings.notifications.budgetAlerts
+                                            .targetMin
+                                        : 0.01
+                                    }
+                                    onChange={(e) =>
+                                      setSettings({
+                                        ...settings,
+                                        notifications: {
+                                          ...settings.notifications,
+                                          budgetAlerts: {
+                                            ...(settings.notifications
+                                              ?.budgetAlerts || {
+                                              enabled: true,
+                                            }),
+                                            targetMin:
+                                              parseFloat(e.target.value) ||
+                                              0.01,
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-[90px]"
+                                  />
+                                </div>
+
+                                <div className="text-center">
+                                  <Label
+                                    htmlFor="target-max"
+                                    className="block pb-1 text-sm"
+                                  >
+                                    Max
+                                  </Label>
+                                  <Input
+                                    id="target-max"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0.5"
+                                    value={
+                                      settings.notifications?.budgetAlerts
+                                        ?.targetMax !== undefined
+                                        ? settings.notifications.budgetAlerts
+                                            .targetMax
+                                        : 0.5
+                                    }
+                                    onChange={(e) =>
+                                      setSettings({
+                                        ...settings,
+                                        notifications: {
+                                          ...settings.notifications,
+                                          budgetAlerts: {
+                                            ...(settings.notifications
+                                              ?.budgetAlerts || {
+                                              enabled: true,
+                                            }),
+                                            targetMax:
+                                              parseFloat(e.target.value) || 0.5,
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-[90px]"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Notification Time Settings */}
+                              <div className="mt-6 border-t pt-4">
+                                <h5 className="text-sm font-medium mb-2">
+                                  Notification Time Settings
+                                </h5>
+                                <p className="text-xs text-gray-600 mb-3">
+                                  Configure when notifications should be sent
+                                </p>
+
+                                {/* Show time-related fields based on targetPeriod */}
+                                {settings.notifications?.budgetAlerts
+                                  ?.targetPeriod === "Hourly" && (
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-4">
+                                      <Label
+                                        htmlFor="hourly-frequency"
+                                        className="w-32 text-right"
+                                      >
+                                        Frequency
+                                      </Label>
+                                      <Select
+                                        value={
+                                          settings.notifications?.budgetAlerts
+                                            ?.hourlyNotificationFrequency ||
+                                          "every"
+                                        }
+                                        onValueChange={(value) =>
+                                          setSettings({
+                                            ...settings,
+                                            notifications: {
+                                              ...settings.notifications,
+                                              budgetAlerts: {
+                                                ...(settings.notifications
+                                                  ?.budgetAlerts || {
+                                                  enabled: true,
+                                                }),
+                                                hourlyNotificationFrequency:
+                                                  value,
+                                              },
+                                            },
+                                          })
+                                        }
+                                      >
+                                        <SelectTrigger
+                                          id="hourly-frequency"
+                                          className="w-[120px]"
+                                        >
+                                          <SelectValue placeholder="Every hour" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="every">
+                                            Every hour
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {settings.notifications?.budgetAlerts
+                                  ?.targetPeriod === "Daily" && (
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-4">
+                                      <Label
+                                        htmlFor="daily-time"
+                                        className="w-32 text-right"
+                                      >
+                                        Notification Time
+                                      </Label>
+                                      <Input
+                                        id="daily-time"
+                                        type="time"
+                                        value={
+                                          settings.notifications?.budgetAlerts
+                                            ?.dailyNotificationTime || "20:00"
+                                        }
+                                        onChange={(e) =>
+                                          setSettings({
+                                            ...settings,
+                                            notifications: {
+                                              ...settings.notifications,
+                                              budgetAlerts: {
+                                                ...(settings.notifications
+                                                  ?.budgetAlerts || {
+                                                  enabled: true,
+                                                }),
+                                                dailyNotificationTime:
+                                                  e.target.value,
+                                              },
+                                            },
+                                          })
+                                        }
+                                        className="w-[120px]"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {settings.notifications?.budgetAlerts
+                                  ?.targetPeriod === "Weekly" && (
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-4">
+                                      <Label
+                                        htmlFor="weekly-day"
+                                        className="w-32 text-right"
+                                      >
+                                        Day of Week
+                                      </Label>
+                                      <Select
+                                        value={
+                                          settings.notifications?.budgetAlerts
+                                            ?.weeklyNotificationDay || "Sunday"
+                                        }
+                                        onValueChange={(value) =>
+                                          setSettings({
+                                            ...settings,
+                                            notifications: {
+                                              ...settings.notifications,
+                                              budgetAlerts: {
+                                                ...(settings.notifications
+                                                  ?.budgetAlerts || {
+                                                  enabled: true,
+                                                }),
+                                                weeklyNotificationDay: value,
+                                              },
+                                            },
+                                          })
+                                        }
+                                      >
+                                        <SelectTrigger
+                                          id="weekly-day"
+                                          className="w-[120px]"
+                                        >
+                                          <SelectValue placeholder="Sunday" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="Sunday">
+                                            Sunday
+                                          </SelectItem>
+                                          <SelectItem value="Monday">
+                                            Monday
+                                          </SelectItem>
+                                          <SelectItem value="Tuesday">
+                                            Tuesday
+                                          </SelectItem>
+                                          <SelectItem value="Wednesday">
+                                            Wednesday
+                                          </SelectItem>
+                                          <SelectItem value="Thursday">
+                                            Thursday
+                                          </SelectItem>
+                                          <SelectItem value="Friday">
+                                            Friday
+                                          </SelectItem>
+                                          <SelectItem value="Saturday">
+                                            Saturday
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                      <Label
+                                        htmlFor="weekly-time"
+                                        className="w-32 text-right"
+                                      >
+                                        Time
+                                      </Label>
+                                      <Input
+                                        id="weekly-time"
+                                        type="time"
+                                        value={
+                                          settings.notifications?.budgetAlerts
+                                            ?.weeklyNotificationTime || "20:00"
+                                        }
+                                        onChange={(e) =>
+                                          setSettings({
+                                            ...settings,
+                                            notifications: {
+                                              ...settings.notifications,
+                                              budgetAlerts: {
+                                                ...(settings.notifications
+                                                  ?.budgetAlerts || {
+                                                  enabled: true,
+                                                }),
+                                                weeklyNotificationTime:
+                                                  e.target.value,
+                                              },
+                                            },
+                                          })
+                                        }
+                                        className="w-[120px]"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {settings.notifications?.budgetAlerts
+                                  ?.targetPeriod === "Monthly" && (
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-4">
+                                      <Label
+                                        htmlFor="monthly-day"
+                                        className="w-32 text-right"
+                                      >
+                                        Day of Month
+                                      </Label>
+                                      <Select
+                                        value={
+                                          settings.notifications?.budgetAlerts
+                                            ?.monthlyNotificationDay || "last"
+                                        }
+                                        onValueChange={(value) =>
+                                          setSettings({
+                                            ...settings,
+                                            notifications: {
+                                              ...settings.notifications,
+                                              budgetAlerts: {
+                                                ...(settings.notifications
+                                                  ?.budgetAlerts || {
+                                                  enabled: true,
+                                                }),
+                                                monthlyNotificationDay: value,
+                                              },
+                                            },
+                                          })
+                                        }
+                                      >
+                                        <SelectTrigger
+                                          id="monthly-day"
+                                          className="w-[120px]"
+                                        >
+                                          <SelectValue placeholder="Last day" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="last">
+                                            Last day
+                                          </SelectItem>
+                                          {Array.from(
+                                            { length: 28 },
+                                            (_, i) => (
+                                              <SelectItem
+                                                key={i + 1}
+                                                value={(i + 1).toString()}
+                                              >
+                                                {i + 1}
+                                              </SelectItem>
+                                            ),
+                                          )}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                      <Label
+                                        htmlFor="monthly-time"
+                                        className="w-32 text-right"
+                                      >
+                                        Time
+                                      </Label>
+                                      <Input
+                                        id="monthly-time"
+                                        type="time"
+                                        value={
+                                          settings.notifications?.budgetAlerts
+                                            ?.monthlyNotificationTime || "20:00"
+                                        }
+                                        onChange={(e) =>
+                                          setSettings({
+                                            ...settings,
+                                            notifications: {
+                                              ...settings.notifications,
+                                              budgetAlerts: {
+                                                ...(settings.notifications
+                                                  ?.budgetAlerts || {
+                                                  enabled: true,
+                                                }),
+                                                monthlyNotificationTime:
+                                                  e.target.value,
+                                              },
+                                            },
+                                          })
+                                        }
+                                        className="w-[120px]"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Legacy fields have been removed as requested */}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <DialogFooter className="flex justify-between">
+                    <DialogClose asChild>
+                      <Button
+                        variant="outline"
+                        className="rounded-full w-10 h-10 p-0"
+                      >
+                        <X className="h-5 w-5 text-red-500" />
+                      </Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                      <Button className="rounded-full w-10 h-10 p-0 bg-green-500 hover:bg-green-600">
+                        <svg
+                          className="h-5 w-5 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
